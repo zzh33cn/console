@@ -19,6 +19,9 @@ def inputWrap():
 		return raw_input(promote)
 
 def execCmd(cmd):
+	return subprocess.getstatusoutput(cmd)
+
+def execCmd2(cmd):
 	#return subprocess.getstatusoutput(cmd)
 	info = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	error=info.stderr.read().decode("utf-8","ignore")
@@ -101,23 +104,23 @@ commands = [
 history = []
 
 while True:
-	user_input=inputWrap()
+	origin_input=inputWrap()
 
-	if len(user_input) == 0:
+	if len(origin_input) == 0:
 		continue
 		
 	existInHis = False
 	for x in history:
-		if x == user_input:
+		if x == origin_input:
 			existInHis = True
 			break
 
 	if existInHis:
 		pass
 	else:
-		history.append(user_input)
+		history.append(origin_input)
 
-	user_input = user_input.split()
+	user_input = origin_input.split()
 
 	cmd=user_input[0]
 
@@ -219,7 +222,7 @@ while True:
 		
 	elif cmd=='accountList':
 		chain33_cmd = cmd_prefix + 'account list'
-		(status, result) = execCmd(chain33_cmd) 
+		(status, result) = execCmd2(chain33_cmd) 
 		if status == 0 :
 			print(result)
 		else:
@@ -240,11 +243,12 @@ while True:
 		if len(user_input) < 2:
 			print("commnad usage: accountCreate label")
 			continue
-		chain33_cmd = cmd_prefix + 'account create -l ' + user_input[1]
-		(status, result) = execCmd(chain33_cmd)
+		chain33_cmd = cmd_prefix + 'account create -l "' + origin_input.split('"')[1] + '"'
+		(status, result) = execCmd2(chain33_cmd)
 		if status == 0:
 			print(result)
 		else:
+			print(result)
 			print("execute command failed:" + chain33_cmd)
 
 	elif cmd=='accountSetlabel':
@@ -252,7 +256,7 @@ while True:
 			print("command usage: accountSetlabel address label")
 			continue
 		chain33_cmd = cmd_prefix + 'account set_label -a ' + user_input[1] + ' -l ' + user_input[2]
-		(status, result) = execCmd(chain33_cmd)
+		(status, result) = execCmd2(chain33_cmd)
 		if status == 0:
 			print(result)
 		else:
@@ -409,13 +413,20 @@ while True:
 	elif cmd=='evmDeploy':
 		chain33_cmd= cmd_prefix + 'evm'
 		(status, result)=execCmd(chain33_cmd)
+		print(result)
 		if 'unknown command "evm"' in result:
 			print("not support evm command")
 			continue
 		if len(user_input) < 4:
 			print("command usage: evmDeploy contractFileName aliasName creatorAddr")
 			continue
-		
+		else:
+			print("support evm")
+			print(user_input[0])
+			print(user_input[1])
+			print(user_input[2])
+			print(user_input[3])
+
 		if os.access(user_input[1], os.R_OK):
 			print(user_input[1] + " is accessible to read")
 		else:
@@ -460,8 +471,16 @@ while True:
 		if tx["receipt"]["tyName"] != "ExecOk":
 			print("execute command ok but tx failed:" + chain33_cmd)
 			continue
-		
-		log=tx["receipt"]["logs"][0]["log"]
+		log=''
+		flag=False
+		for x in tx["receipt"]["logs"]:
+			if x["tyName"] == "LogCallContract":
+				log = x["log"]
+				flag=True
+		if not flag:
+			print("no LogCallContract log in tx, please check")
+			continue
+		#log=tx["receipt"]["logs"][0]["log"]
 		contractName=log["contractName"]
 		contractAddr=log["contractAddr"]
 		contract["creator"] = creator
@@ -543,14 +562,28 @@ while True:
 			print("execute command ok but tx failed:" + chain33_cmd)
 			continue
 		
-		log=tx["receipt"]["logs"][0]["log"]
-		tyName=tx["receipt"]["logs"][0]["tyName"]
-		if tyName=="LogEVMStateChangeItem":
-			log=log=tx["receipt"]["logs"][1]["log"]
-			print(interf + " ok")
-		elif tyName=="LogCallContract":
-			print(log)
-		else:
-			print("log err:" + log)
+		log=''
+		flag=False
+		for x in tx["receipt"]["logs"]:
+			if x["tyName"] == "LogEVMStateChangeItem":
+				log = x["log"]
+				flag=True
+
+		if not flag:
+			for x in tx["receipt"]["logs"]:
+				if x["tyName"] == "LogCallContract":
+					log = x["log"]
+					flag=True
+
+		if not flag:
+			print("no LogEVMStateChangeItem or LogCallContract log in tx, call failed")
+			continue	
+
+		print(interf + " ok")
+		print("log:")
+		print(log)
 	else:
-		print("unknow command:"+cmd)
+		#print("unknow command:"+cmd)
+		chain33_cmd= cmd_prefix + origin_input
+		(status, result)=execCmd(chain33_cmd)
+		print(result)
