@@ -84,7 +84,9 @@ commands = [
 		'queryTx', 
 		'walletStatus', 
 		'walletUnlock', 
+		'walletUnlockTicket', 
 		'walletLock',
+		'walletAutomine',
 		'walletSetfee',
 		'walletSetpwd',
 		'walletAutomine',
@@ -170,7 +172,7 @@ while True:
 	
 	elif cmd=='net':
 		if len(user_input) != 2:
-			print("command usage: net fault|info|time|is_clock_sync|is_sync|peer")
+			print("command usage: net fault|info|time|is_clock_sync|is_sync|peer|peer_info")
 			continue
 		chain33_cmd = cmd_prefix
 		for x in user_input:
@@ -307,6 +309,31 @@ while True:
 		(status,result)=execCmd(chain33_cmd)
 		print(result)
 
+	elif cmd=='walletUnlockTicket':
+		if len(user_input) < 2 :
+			print("command usage: walletUnlockTicket password [timeout]")
+			continue
+
+		chain33_cmd= cmd_prefix + 'wallet unlock -s ticket -p ' + user_input[1]
+		if len(user_input) == 3 :
+			chain33_cmd=chain33_cmd + ' -t ' + user_input[2]
+		(status,result)=execCmd(chain33_cmd)
+		print(result)
+
+	elif cmd=='walletAutomine':
+		if len(user_input) < 2 :
+			print("command usage: walletAutomine on|off")
+			continue
+		if user_input[1] == 'on':
+			chain33_cmd= cmd_prefix + 'wallet auto_mine -f 1'
+		elif user_input[1] == 'off':
+			chain33_cmd= cmd_prefix + 'wallet auto_mine -f 0'
+		else:
+			print("command usage: walletAutomine on|off")
+			continue
+		(status,result)=execCmd(chain33_cmd)
+		print(result)
+
 	elif cmd=='walletSetfee':
 		if len(user_input) < 2 :
 			print("command usage: walletSetfee fee")
@@ -320,15 +347,6 @@ while True:
 			print("command usage: walletSetpwd newpwd oldpwd")
 			continue
 		chain33_cmd= cmd_prefix + 'wallet set_pwd -n ' + user_input[1] + ' -o ' + user_input[2]
-		(status,result)=execCmd(chain33_cmd)
-		print(result)
-
-	elif cmd== 'walletAutomine':
-		if len(user_input) < 2:
-			print("command usage: walletAutomine on(1)|off(0)")
-			continue
-
-		chain33_cmd= cmd_prefix + 'wallet auto_mine -f ' + user_input[1]
 		(status,result)=execCmd(chain33_cmd)
 		print(result)
 
