@@ -243,7 +243,11 @@ while True:
 		if len(user_input) < 2:
 			print("commnad usage: accountCreate label")
 			continue
-		chain33_cmd = cmd_prefix + 'account create -l "' + origin_input.split('"')[1] + '"'
+		if '"' in origin_input:
+			chain33_cmd = cmd_prefix + 'account create -l "' + origin_input.split('"')[1] + '"'
+		else:
+			chain33_cmd = cmd_prefix + 'account create -l ' + user_input[1]
+
 		(status, result) = execCmd2(chain33_cmd)
 		if status == 0:
 			print(result)
