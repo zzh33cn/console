@@ -19,8 +19,16 @@ def inputWrap():
 		return raw_input(promote)
 
 def execCmd(cmd):
-	return subprocess.getstatusoutput(cmd)
-
+	#return subprocess.getstatusoutput(cmd)
+	info = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	error=info.stderr.read().decode("utf-8","ignore")
+	#print(error)
+	#print(info)
+	ret=0
+	if len(error) > 0:
+		ret = 1
+		return (ret, error)
+	return (ret, info.stdout.read().decode("utf-8"))
 def readRPCAddr(fileName):
     file = open(fileName,encoding='gb18030',errors='ignore')
     while True:
@@ -213,6 +221,7 @@ while True:
 		if status == 0 :
 			print(result)
 		else:
+			print(result)
 			print("execute command failed:" + chain33_cmd)
 
 	elif cmd=='accountBalance':
